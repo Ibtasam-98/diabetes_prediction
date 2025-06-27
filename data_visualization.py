@@ -18,7 +18,8 @@ def plot_correlation_matrix(data, features):
 
 
 def plot_confusion_matrices(results):
-    fig, axes = plt.subplots(1, 2, figsize=(15, 6))
+    fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+    axes = axes.ravel()
     for ax, (name, result) in zip(axes, results.items()):
         sns.heatmap(result['cm_test'], annot=True, fmt='d', cmap='Blues', cbar=False,
                     xticklabels=['No Diabetes', 'Diabetes'],
@@ -33,7 +34,7 @@ def plot_confusion_matrices(results):
 
 
 def plot_roc_curves(results):
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(10, 8))
     for name, result in results.items():
         plt.plot(result['fpr'], result['tpr'],
                  label=f'{name} (AUC = {result["roc_auc"]:.2f})')
@@ -55,7 +56,7 @@ def plot_model_comparison(results):
     x = np.arange(len(models))
     width = 0.35
 
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(12, 6))
     rects1 = ax.bar(x - width / 2, [results[m]['train_accuracy'] for m in models],
                     width, label='Training')
     rects2 = ax.bar(x + width / 2, [results[m]['test_accuracy'] for m in models],
@@ -64,7 +65,7 @@ def plot_model_comparison(results):
     ax.set_ylabel('Accuracy')
     ax.set_title('Model Performance Comparison')
     ax.set_xticks(x)
-    ax.set_xticklabels(models)
+    ax.set_xticklabels(models, rotation=45, ha='right')
     ax.legend()
 
     ax.bar_label(rects1, padding=3, fmt='%.3f')
@@ -74,42 +75,38 @@ def plot_model_comparison(results):
     plt.show()
 
 
+# In data_visualization.py, update the plot_learning_curves function:
 def plot_learning_curves(models, X_train, y_train):
-    """
-    Plot learning curves for multiple models to visualize training vs validation performance
-    """
     plt.figure(figsize=(12, 8))
+    colors = ['blue', 'red', 'green', 'purple']
 
-    for model_name, model in models.items():
-        # Calculate learning curve data
+
+    for (model_name, model), color in zip(models.items(), colors):
         train_sizes, train_scores, test_scores = learning_curve(
             model, X_train, y_train, cv=5, n_jobs=-1,
             train_sizes=np.linspace(0.1, 1.0, 10),
             scoring='accuracy')
 
-        # Calculate mean and standard deviation
         train_scores_mean = np.mean(train_scores, axis=1)
         train_scores_std = np.std(train_scores, axis=1)
         test_scores_mean = np.mean(test_scores, axis=1)
         test_scores_std = np.std(test_scores, axis=1)
 
-        # Plot learning curve
-        plt.plot(train_sizes, train_scores_mean, 'o-', color='blue',
+        plt.plot(train_sizes, train_scores_mean, 'o-', color=color,
                  label=f'{model_name} Training')
-        plt.plot(train_sizes, test_scores_mean, 'o-', color='red',
-                 label=f'{model_name} Cross-validation')
+        plt.plot(train_sizes, test_scores_mean, 'o--', color=color,  # Changed to o--
+                 label=f'{model_name} CV')
 
-        # Plot std deviation bands
         plt.fill_between(train_sizes, train_scores_mean - train_scores_std,
                          train_scores_mean + train_scores_std, alpha=0.1,
-                         color='blue')
+                         color=color)
         plt.fill_between(train_sizes, test_scores_mean - test_scores_std,
                          test_scores_mean + test_scores_std, alpha=0.1,
-                         color='red')
+                         color=color)
 
     plt.title('Learning Curves', fontsize=16)
     plt.xlabel('Training Examples', fontsize=12)
     plt.ylabel('Accuracy', fontsize=12)
-    plt.legend(loc='best', fontsize=12)
+    plt.legend(loc='best', fontsize=10)
     plt.grid(True, alpha=0.3)
     plt.show()
