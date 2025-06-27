@@ -1,4 +1,4 @@
-# SmartGluco: A Mobile Health Solution for Diabetes Risk Assessment 🩺
+# SmartGluco: A Mobile Health Solution for Diabetes Risk Assessment
 
 ---
 
