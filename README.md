@@ -8,7 +8,7 @@ SmartGluco is an end-to-end mobile health system designed to provide real-time d
 
 * **Optimized Machine Learning Model:** A Logistic Regression model enhanced with second-degree polynomial features for improved predictive power, achieving a **73% accuracy** on the test set.
 * **Scalable RESTful API:** A lightweight Flask backend to serve real-time diabetes risk predictions with sub-500ms response times.
-* **Intuitive Mobile Application Integration (Frontend not included in this repo):** Designed to connect with a Flutter mobile application (as detailed in the accompanying [research paper]([SmartGluco_Conferece_IEEE.pdf](https://github.com/Ibtasam-98/smartgluco/blob/main/smartGluco.pdf))) for interactive data input and clear, color-coded results.
+* **Intuitive Mobile Application Integration (Frontend not included in this repo):** Designed to connect with a Flutter mobile application (as detailed in the accompanying [research paper](https://github.com/Ibtasam-98/smartgluco/blob/main/smartGluco.pdf)) for interactive data input and clear, color-coded results.
 * **Automated Model Training & Persistence:** Includes a script (`main.py`) to train the model and save the trained model, scaler, and polynomial feature transformer for easy deployment.
 
 ## 🚀 Getting Started
