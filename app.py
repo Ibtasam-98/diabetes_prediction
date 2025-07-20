@@ -1,226 +1,186 @@
-from flask import Flask, request, jsonify
+# app_streamlit.py
+import streamlit as st
 import pandas as pd
 import numpy as np
-from sklearn.linear_model import LogisticRegression
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC  # Changed from RandomForestClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.preprocessing import StandardScaler, PolynomialFeatures
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.metrics import accuracy_score
 import joblib
+from PIL import Image
 
-app = Flask(__name__)
+# Set page configuration
+st.set_page_config(
+    page_title="Diabetes Prediction App",
+    page_icon="🩺",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# Load and preprocess data
-try:
-    print("Loading dataset...")
-    data = pd.read_csv("dataset/diabetes.csv")
-    print("Dataset loaded successfully")
-except FileNotFoundError:
-    print("Error: diabetes.csv not found. Please ensure the dataset is in the same directory.")
-    exit()
 
-# Define features and target
+# Load models and preprocessing objects
+@st.cache_resource
+def load_models():
+    try:
+        models = joblib.load('models.pkl')
+        scaler = joblib.load('scaler.pkl')
+        poly = joblib.load('poly.pkl')
+        return models, scaler, poly
+    except Exception as e:
+        st.error(f"Error loading models: {str(e)}")
+        return None, None, None
+
+
+models, scaler, poly = load_models()
+
+# Define features
 features = ['Glucose', 'BloodPressure', 'Insulin', 'BMI', 'Age']
-target = 'Outcome'
 
-X = data[features]
-y = data[target]
+# App title and description
+st.title("Diabetes Prediction App")
+st.markdown("""
+This app predicts the likelihood of diabetes based on health metrics. 
+Enter the patient's information in the sidebar and click 'Predict' to see the results.
+""")
 
-# Preprocessing
-print("Preprocessing data...")
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
+# Sidebar for user input
+st.sidebar.header("Patient Information")
 
-poly = PolynomialFeatures(degree=2, include_bias=False)
-X_poly = poly.fit_transform(X_scaled)
 
-# Train-test split
-X_train, X_test, y_train, y_test = train_test_split(X_poly, y, test_size=0.2, random_state=42)
+# Input fields with validation
+def get_user_input():
+    glucose = st.sidebar.slider('Glucose (mg/dL)', 70, 200, 120)
+    blood_pressure = st.sidebar.slider('Blood Pressure (mmHg)', 60, 140, 80)
+    insulin = st.sidebar.slider('Insulin (μU/mL)', 15, 300, 80)
+    bmi = st.sidebar.slider('BMI (kg/m²)', 15, 50, 25)
+    age = st.sidebar.slider('Age (years)', 20, 100, 30)
 
-# Initialize models dictionary to store all models and their accuracies
-models = {
-    'Logistic Regression': {
-        'model': None,
-        'accuracy': None,
-        'params': {
-            'C': np.logspace(-3, 3, 7),
-            'penalty': ['l1', 'l2'],
-            'solver': ['liblinear', 'saga'],
-            'class_weight': ['balanced', None]
-        }
-    },
-    'KNN': {
-        'model': None,
-        'accuracy': None,
-        'params': {
-            'n_neighbors': range(1, 21),
-            'weights': ['uniform', 'distance'],
-            'metric': ['euclidean', 'manhattan', 'minkowski']
-        }
-    },
-    'Decision Tree': {
-        'model': None,
-        'accuracy': None,
-        'params': {
-            'max_depth': [None] + list(range(3, 21)),
-            'min_samples_split': range(2, 11),
-            'min_samples_leaf': range(1, 11),
-            'criterion': ['gini', 'entropy'],
-            'max_features': ['sqrt', 'log2', None]
-        }
-    },
-    'SVM': {  # Changed from Random Forest to SVM
-        'model': None,
-        'accuracy': None,
-        'params': {
-            'C': [0.1, 1, 10, 100],
-            'gamma': ['scale', 'auto', 0.001, 0.01, 0.1, 1],
-            'kernel': ['linear', 'rbf', 'poly'],
-            'class_weight': ['balanced', None],
-            'probability': [True]  # Required for predict_proba
-        }
+    # Create dictionary
+    user_data = {
+        'Glucose': glucose,
+        'BloodPressure': blood_pressure,
+        'Insulin': insulin,
+        'BMI': bmi,
+        'Age': age
     }
-}
 
-# Train and evaluate models
-print("\nTraining models...")
-for model_name, model_data in models.items():
-    print(f"\nTraining {model_name}...")
-
-    if model_name == 'Logistic Regression':
-        grid = GridSearchCV(LogisticRegression(max_iter=1000),
-                          model_data['params'],
-                          cv=5,
-                          scoring='accuracy',
-                          n_jobs=-1,
-                          error_score='raise')
-    elif model_name == 'KNN':
-        grid = GridSearchCV(KNeighborsClassifier(),
-                          model_data['params'],
-                          cv=5,
-                          scoring='accuracy',
-                          n_jobs=-1,
-                          error_score='raise')
-    elif model_name == 'Decision Tree':
-        grid = GridSearchCV(DecisionTreeClassifier(random_state=42),
-                          model_data['params'],
-                          cv=5,
-                          scoring='accuracy',
-                          n_jobs=-1,
-                          error_score='raise')
-    else:  # SVM
-        grid = GridSearchCV(SVC(random_state=42),
-                          model_data['params'],
-                          cv=5,
-                          scoring='accuracy',
-                          n_jobs=-1,
-                          error_score='raise')
-
-    grid.fit(X_train, y_train)
-    models[model_name]['model'] = grid.best_estimator_
-    models[model_name]['accuracy'] = accuracy_score(y_test, grid.best_estimator_.predict(X_test))
-    print(f"{model_name} trained with accuracy: {models[model_name]['accuracy']:.4f}")
-    print(f"Best parameters: {grid.best_params_}")
-
-# Save models and preprocessing objects
-print("\nSaving models...")
-joblib.dump(models, 'models.pkl')
-joblib.dump(scaler, 'scaler.pkl')
-joblib.dump(poly, 'poly.pkl')
-print("Models saved successfully")
+    # Convert to DataFrame
+    features_df = pd.DataFrame(user_data, index=[0])
+    return features_df
 
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    print("\nReceived prediction request...")
-    try:
-        # Get input data
-        input_data = request.json
-        print("Input data:", input_data)
+user_input = get_user_input()
 
-        # Validate input
-        required_fields = features
-        for field in required_fields:
-            if field not in input_data:
-                print(f"Missing field: {field}")
-                return jsonify({'error': f'Missing required field: {field}'}), 400
-            if not isinstance(input_data[field], (int, float)):
-                print(f"Invalid value for {field}: {input_data[field]}")
-                return jsonify({'error': f'Invalid value for {field}. Must be numeric.'}), 400
+# Main panel
+st.subheader("Patient Information")
+st.write(user_input)
 
-        # Prepare input for prediction
-        user_data = pd.DataFrame([[input_data[field] for field in features]],
-                               columns=features)
-        print("Input DataFrame:\n", user_data)
+# Add some visual elements
+col1, col2 = st.columns(2)
 
-        # Preprocess input
-        user_data_scaled = scaler.transform(user_data)
-        user_data_poly = poly.transform(user_data_scaled)
+with col1:
+    st.markdown("### Normal Ranges")
+    st.markdown("""
+    - **Glucose**: 70-100 mg/dL (fasting)
+    - **Blood Pressure**: <120/80 mmHg
+    - **Insulin**: 2-25 μU/mL (fasting)
+    - **BMI**: 18.5-24.9 kg/m²
+    """)
 
-        # Make predictions with all models
-        predictions = {}
-        for model_name, model_data in models.items():
-            print(f"\nMaking prediction with {model_name}...")
-            pred = model_data['model'].predict(user_data_poly)[0]
-            proba = model_data['model'].predict_proba(user_data_poly)[0][1]
-            print(f"{model_name} prediction: {'Diabetes' if pred == 1 else 'No Diabetes'} (probability: {proba:.4f})")
+with col2:
+    st.markdown("### About Diabetes")
+    st.markdown("""
+    Diabetes is a chronic condition that affects how your body processes blood sugar (glucose).
+    Early detection can help prevent complications.
+    """)
 
-            predictions[model_name] = {
-                'prediction': 'Diabetes' if pred == 1 else 'No Diabetes',
-                'probability': float(proba),
-                'model_accuracy': float(model_data['accuracy'])
-            }
+# Prediction button
+if st.sidebar.button('Predict'):
+    if models is None or scaler is None or poly is None:
+        st.error("Models not loaded properly. Please check the model files.")
+    else:
+        try:
+            # Preprocess input
+            user_data_scaled = scaler.transform(user_input)
+            user_data_poly = poly.transform(user_data_scaled)
 
-        # Determine consensus prediction
-        diabetes_votes = sum(1 for pred in predictions.values() if pred['prediction'] == 'Diabetes')
-        no_diabetes_votes = len(predictions) - diabetes_votes
-        print(f"\nVotes - Diabetes: {diabetes_votes}, No Diabetes: {no_diabetes_votes}")
+            # Make predictions with all models
+            predictions = {}
+            for model_name, model_data in models.items():
+                pred = model_data['model'].predict(user_data_poly)[0]
+                proba = model_data['model'].predict_proba(user_data_poly)[0][1]
 
-        if diabetes_votes > no_diabetes_votes:
-            consensus = 'Diabetes'
-        elif no_diabetes_votes > diabetes_votes:
-            consensus = 'No Diabetes'
-        else:
-            # If tie, use model with higher accuracy
-            best_model = max(predictions.items(), key=lambda x: x[1]['model_accuracy'])
-            consensus = best_model[1]['prediction']
-            print(f"Tie broken using {best_model[0]} (accuracy: {best_model[1]['model_accuracy']:.4f})")
+                predictions[model_name] = {
+                    'prediction': 'Diabetes' if pred == 1 else 'No Diabetes',
+                    'probability': float(proba),
+                    'model_accuracy': float(model_data['accuracy'])
+                }
 
-        print(f"Consensus prediction: {consensus}")
+            # Determine consensus prediction
+            diabetes_votes = sum(1 for pred in predictions.values() if pred['prediction'] == 'Diabetes')
+            no_diabetes_votes = len(predictions) - diabetes_votes
 
-        # Prepare response
-        response = {
-            'consensus_prediction': consensus,
-            'model_predictions': predictions,
-            'status': 'success'
-        }
+            if diabetes_votes > no_diabetes_votes:
+                consensus = 'Diabetes'
+                consensus_color = 'red'
+            elif no_diabetes_votes > diabetes_votes:
+                consensus = 'No Diabetes'
+                consensus_color = 'green'
+            else:
+                # If tie, use model with higher accuracy
+                best_model = max(predictions.items(), key=lambda x: x[1]['model_accuracy'])
+                consensus = best_model[1]['prediction']
+                consensus_color = 'orange' if consensus == 'Diabetes' else 'green'
 
-        return jsonify(response)
+            # Display results
+            st.subheader("Prediction Results")
 
-    except Exception as e:
-        print(f"Error during prediction: {str(e)}")
-        return jsonify({'error': str(e), 'status': 'error'}), 500
+            # Consensus prediction with color
+            st.markdown(
+                f"### Consensus Prediction: <span style='color:{consensus_color};font-weight:bold;'>{consensus}</span>",
+                unsafe_allow_html=True)
 
+            # Model predictions in a table
+            st.markdown("### Individual Model Predictions")
+            predictions_df = pd.DataFrame.from_dict(predictions, orient='index')
+            st.dataframe(predictions_df.style.format({
+                'probability': '{:.2%}',
+                'model_accuracy': '{:.2%}'
+            }))
 
-@app.route('/model_info', methods=['GET'])
-def model_info():
-    print("\nReceived model info request")
-    try:
-        model_info = {}
-        for model_name, model_data in models.items():
-            model_info[model_name] = {
-                'accuracy': float(model_data['accuracy']),
-                'parameters': str(model_data['model'].get_params())
-            }
-        print("Returning model info")
-        return jsonify({'models': model_info, 'status': 'success'})
-    except Exception as e:
-        print(f"Error getting model info: {str(e)}")
-        return jsonify({'error': str(e), 'status': 'error'}), 500
+            # Visual indicators
+            st.markdown("### Probability Visualization")
 
+            # Create a bar chart of probabilities
+            prob_df = pd.DataFrame({
+                'Model': predictions.keys(),
+                'Diabetes Probability': [p['probability'] for p in predictions.values()]
+            })
 
-if __name__ == '__main__':
-    print("\nStarting Flask server...")
-    app.run(debug=True, port=5001)
+            st.bar_chart(prob_df.set_index('Model'))
+
+            # Add some explanatory text
+            if consensus == 'Diabetes':
+                st.warning(
+                    "The models suggest a high likelihood of diabetes. Please consult with a healthcare professional for further evaluation.")
+            else:
+                st.success(
+                    "The models suggest a low likelihood of diabetes. However, regular check-ups are recommended for maintaining good health.")
+
+        except Exception as e:
+            st.error(f"Error during prediction: {str(e)}")
+
+# Add some additional information
+st.markdown("---")
+st.markdown("### About This App")
+st.markdown("""
+This application uses machine learning models to predict diabetes risk based on:
+- **Logistic Regression**
+- **K-Nearest Neighbors (KNN)**
+- **Decision Tree**
+- **Support Vector Machine (SVM)**
+
+The models were trained on the Pima Indians Diabetes Dataset.
+""")
+
+# Add a footer
+st.markdown("---")
+st.markdown("""
+*Note: This prediction is for informational purposes only and should not replace professional medical advice.*
+""")
