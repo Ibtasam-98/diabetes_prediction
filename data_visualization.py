@@ -4,6 +4,9 @@ import numpy as np
 from sklearn.model_selection import learning_curve
 from tabulate import tabulate
 
+# Set Seaborn theme for blue palette
+sns.set_palette("Blues")
+
 
 def print_metrics_table(results):
     """Print all metrics in a formatted table in terminal"""
@@ -29,21 +32,22 @@ def print_metrics_table(results):
 
 
 def plot_pairplot(data, features):
-    """Pairplot visualization with terminal summary"""
+    """Pairplot visualization in blue tones"""
     print("\nGenerating Pairplot...")
-    sns.pairplot(data[features], hue='Outcome', height=2.5)
+    sns.pairplot(data[features], hue='Outcome', height=2.5,
+                 palette=sns.color_palette("Blues", n_colors=2))
     plt.suptitle('Pairplot of Selected Features', y=1.02)
     plt.show()
     print("Pairplot completed showing feature relationships by Outcome class")
 
 
 def plot_correlation_matrix(data, features):
-    """Correlation matrix with terminal output"""
+    """Correlation matrix in blue shades"""
     print("\nCalculating Feature Correlations...")
     corr_matrix = data[features].corr()
 
     plt.figure(figsize=(10, 8))
-    sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap='coolwarm', square=True)
+    sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap='Blues', square=True)
     plt.title('Correlation Matrix of Selected Features', fontsize=16)
     plt.show()
 
@@ -52,7 +56,7 @@ def plot_correlation_matrix(data, features):
 
 
 def plot_confusion_matrices(results):
-    """Confusion matrices with terminal output"""
+    """Confusion matrices using blue shades"""
     print("\nGenerating Confusion Matrices...")
     fig, axes = plt.subplots(2, 2, figsize=(15, 12))
     axes = axes.ravel()
@@ -67,7 +71,6 @@ def plot_confusion_matrices(results):
             ax.set_xlabel('Predicted Label')
             ax.set_ylabel('True Label')
 
-            # Print confusion matrix to terminal
             print(f"\n{name} Confusion Matrix:")
             print(result['cm_test'])
 
@@ -77,13 +80,14 @@ def plot_confusion_matrices(results):
 
 
 def plot_roc_curves(results):
-    """ROC curves with terminal output"""
+    """ROC curves using shades of blue"""
     print("\nGenerating ROC Curves...")
     plt.figure(figsize=(10, 8))
+    blue_shades = ['#1f77b4', '#005f99', '#007acc', '#3399ff']
 
-    for name, result in results.items():
+    for (name, result), color in zip(results.items(), blue_shades):
         if 'error' not in result:
-            plt.plot(result['fpr'], result['tpr'],
+            plt.plot(result['fpr'], result['tpr'], color=color,
                      label=f'{name} (AUC = {result["roc_auc"]:.2f})')
             print(f"{name} AUC: {result['roc_auc']:.4f}")
 
@@ -94,16 +98,16 @@ def plot_roc_curves(results):
     plt.ylabel('True Positive Rate')
     plt.title('ROC Curves Comparison')
     plt.legend(loc="lower right")
+    plt.grid(True, alpha=0.3)
     plt.show()
 
 
 def plot_model_comparison(results):
-    """Model comparison bar chart with terminal output"""
+    """Bar chart using blue tones"""
     print("\nGenerating Model Comparison Chart...")
     metrics = ['train_accuracy', 'test_accuracy']
     models = list(results.keys())
 
-    # Print accuracy comparison
     print("\nModel Accuracy Comparison:")
     for name in models:
         if 'error' not in results[name]:
@@ -112,11 +116,12 @@ def plot_model_comparison(results):
     x = np.arange(len(models))
     width = 0.35
 
+    train_accuracies = [results[m]['train_accuracy'] for m in models if 'error' not in results[m]]
+    test_accuracies = [results[m]['test_accuracy'] for m in models if 'error' not in results[m]]
+
     fig, ax = plt.subplots(figsize=(12, 6))
-    rects1 = ax.bar(x - width / 2, [results[m]['train_accuracy'] for m in models if 'error' not in results[m]],
-                    width, label='Training')
-    rects2 = ax.bar(x + width / 2, [results[m]['test_accuracy'] for m in models if 'error' not in results[m]],
-                    width, label='Testing')
+    rects1 = ax.bar(x - width / 2, train_accuracies, width, label='Training', color='#4c72b0')
+    rects2 = ax.bar(x + width / 2, test_accuracies, width, label='Testing', color='#6baed6')
 
     ax.set_ylabel('Accuracy')
     ax.set_title('Model Performance Comparison')
@@ -132,10 +137,10 @@ def plot_model_comparison(results):
 
 
 def plot_learning_curves(models, X_train, y_train):
-    """Learning curves with terminal output"""
+    """Learning curves with blue tones"""
     print("\nGenerating Learning Curves...")
     plt.figure(figsize=(12, 8))
-    colors = ['blue', 'red', 'green', 'purple']
+    colors = ['#1f77b4', '#005f99', '#007acc', '#3399ff']
 
     for (model_name, model), color in zip(models.items(), colors):
         try:
@@ -161,7 +166,6 @@ def plot_learning_curves(models, X_train, y_train):
                              test_mean + test_std, alpha=0.1,
                              color=color)
 
-            # Print learning curve summary
             print(f"\n{model_name} Learning Curve:")
             for size, t_mean, v_mean in zip(train_sizes, train_mean, test_mean):
                 print(f"Train Size: {size:.0f} | Train Acc: {t_mean:.3f} | Val Acc: {v_mean:.3f}")

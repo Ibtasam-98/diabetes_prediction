@@ -18,9 +18,9 @@ st.set_page_config(
 @st.cache_resource
 def load_models():
     try:
-        models = joblib.load('models.pkl')
-        scaler = joblib.load('scaler.pkl')
-        poly = joblib.load('poly.pkl')
+        models = joblib.load('saved_models/models.pkl')
+        scaler = joblib.load('saved_models/scaler.pkl')
+        poly = joblib.load('saved_models/poly.pkl')
         return models, scaler, poly
     except Exception as e:
         st.error(f"Error loading models: {str(e)}")
