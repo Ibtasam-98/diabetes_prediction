@@ -2,7 +2,7 @@
 
 ---
 
-SmartGluco is an end-to-end mobile health system designed to provide real-time diabetes risk assessment using machine learning. This repository contains the backend API, the machine learning model training script, and the necessary data and saved model artifacts.
+SmartGluco is an end to end mobile health system designed to provide real-time diabetes risk assessment using machine learning. This repository contains the backend API, the machine learning model training script, and the necessary data and saved model artifacts.
 
 ## Features
 
@@ -14,21 +14,6 @@ SmartGluco is an end-to-end mobile health system designed to provide real-time d
 ## Getting Started
 
 Follow these steps to get a copy of the project up and running on your local machine.
-
-### Prerequisites
-
-Before you begin, ensure you have the following installed:
-
-* **Python 3.8+**
-* **pip** (Python package installer)
-
-### Installation
-
-1.  **Clone the repository:**
-    ```bash
-    git clone [https://github.com/Ibtasam-98/smartgluco.git](https://github.com/Ibtasam-98/smartgluco.git)
-    cd smartgluco
-    ```
 
 ### Data Setup
 
