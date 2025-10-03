@@ -1,3 +1,4 @@
+
 from sklearn.preprocessing import StandardScaler, PolynomialFeatures
 from sklearn.model_selection import train_test_split
 
@@ -23,3 +24,4 @@ def preprocess_data(data, features, target, test_size=0.2, random_state=42):
         X_poly, y, test_size=test_size, random_state=random_state)
 
     return X_train, X_test, y_train, y_test, scaler, poly
+
