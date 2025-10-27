@@ -38,7 +38,7 @@ st.title("🩺 SmartGluco - Diabetes Risk Assessment")
 st.markdown("""
 ### Integrating Machine Learning with Health Psychology Frameworks
 
-This application uses advanced machine learning models enhanced with psychological theory 
+This application uses advanced machine learning models enhanced with psychological theory
 to provide comprehensive diabetes risk assessment based on health metrics.
 """)
 
@@ -316,7 +316,7 @@ st.markdown("""
 # Enhanced disclaimer
 st.markdown("---")
 st.markdown("""
-**Disclaimer**: This risk assessment tool integrates machine learning with health psychology frameworks 
-for educational and screening purposes. It should not replace professional medical diagnosis, 
+**Disclaimer**: This risk assessment tool integrates machine learning with health psychology frameworks
+for educational and screening purposes. It should not replace professional medical diagnosis,
 consultation, or treatment. Always consult with qualified healthcare providers for medical decisions.
 """)
