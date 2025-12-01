@@ -29,7 +29,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Set style
 sns.set_palette("Blues")
 plt.style.use('seaborn-v0_8-whitegrid')
 
